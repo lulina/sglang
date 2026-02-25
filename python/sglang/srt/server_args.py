@@ -639,6 +639,9 @@ class ServerArgs:
     enable_fused_qk_norm_rope: bool = False
     enable_precise_embedding_interpolation: bool = False
 
+    # Xlite graph configuration
+    xlite_graph_config: Optional[Dict[str, Any]] = None
+
     # Dynamic batch tokenizer
     enable_dynamic_batch_tokenizer: bool = False
     dynamic_batch_tokenizer_batch_size: int = 32
@@ -4690,7 +4693,18 @@ class ServerArgs:
             "--torchao-config",
             type=str,
             default=ServerArgs.torchao_config,
-            help="Optimize the model with torchao. Experimental feature. Current choices are: int8dq, int8wo, int4wo-<group_size>, fp8wo, fp8dq-per_tensor, fp8dq-per_row",
+            help="Optimize model with torchao. Experimental feature. Current choices are: int8dq, int8wo, int4wo-<group_size>, fp8wo, fp8dq-per_tensor, fp8dq-per_row",
+        )
+        parser.add_argument(
+            "--xlite-graph-config",
+            type=str,
+            default=ServerArgs.xlite_graph_config,
+            help="Xlite graph configuration for NPU. Format: JSON string with keys: enabled, full_mode, etc. Example: '{\"enabled\": true, \"full_mode\": true}'",
+        )
+        parser.add_argument(
+            "--enable-nan-detection",
+            action="store_true",
+            help="Enable NaN detection for debugging purposes.",
         )
         parser.add_argument(
             "--enable-nan-detection",

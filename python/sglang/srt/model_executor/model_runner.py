@@ -86,6 +86,7 @@ from sglang.srt.eplb.expert_location import (
 )
 from sglang.srt.eplb.expert_location_updater import ExpertLocationUpdater
 from sglang.srt.hardware_backend.npu.graph_runner.npu_graph_runner import NPUGraphRunner
+from sglang.srt.hardware_backend.npu.graph_runner.xlite_graph_runner import XliteGraphRunner
 from sglang.srt.layers import deep_gemm_wrapper
 from sglang.srt.layers.attention.attention_registry import (
     ATTENTION_BACKENDS,
@@ -2139,9 +2140,21 @@ class ModelRunner(ModelRunnerKVCacheMixin):
             {
                 "cpu": CPUGraphRunner,
                 "npu": NPUGraphRunner,
+                "npu_xlite": XliteGraphRunner,
             },
         )
-        self.graph_runner = graph_runners[self.device](self)
+        
+        device_key = self.device
+        if self.device == "npu" and self.server_args.xlite_graph_config is not None:
+            xlite_config = self.server_args.xlite_graph_config
+            if isinstance(xlite_config, str):
+                import json
+                xlite_config = json.loads(xlite_config)
+            if xlite_config.get("enabled", False):
+                device_key = "npu_xlite"
+                logger.info("Xlite graph runner enabled")
+        
+        self.graph_runner = graph_runners[device_key](self)
 
         after_mem = get_available_gpu_memory(self.device, self.gpu_id)
         self.graph_mem_usage = before_mem - after_mem
